@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symulator Piłsudskiego</title>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #game {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        h2 {
+            color: #555;
+        }
+
+        #datetime {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+            color: #555;
+        }
+
+        #info, #economy, #diplomacy, #production, #army {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        #economy, #diplomacy, #production, #army {
+            float: left;
+            width: 30%;
+            margin-right: 5%;
+        }
+
+        #actions {
+            text-align: center;
+            clear: both;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        p {
+            color: #666;
+            margin: 10px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body onload="startGame()">
+
+<div id="game">
+    <div id="datetime">
+        <span id="date"></span> | <span id="time"></span>
+    </div>
+    <h1>Symulator Piłsudskiego</h1>
+    <div id="info">
+       
+    </div>
+    <div id="economy">
+       
+        <h2>Ekonomiczne</h2>
+        <p id="money">Pieniądze: 1000 zł</p>
+        <p id="resources">Surowce: 0 drewna, 0 stali</p>
+        <button onclick="buyResources()">Kup surowce</button>
+        <button onclick="sellWood()">Sprzedaj drewno</button>
+        <button onclick="sellSteel()">Sprzedaj stal</button>
+        <button onclick="buildFactory()">Buduj fabrykę (koszt: 500 zł)</button>
+        <button onclick="buildSawmill()">Buduj tartak (koszt: 300 zł)</button>
+    </div>
+    <div id="diplomacy">
+     
+        <h2>Dyplomacja</h2>
+        <p id="relations-Niemcy">Niemcy: neutralne</p>
+        <p id="relations-Rosja">Rosja: neutralne</p>
+        <p id="relations-Czechosłowacja">Czechosłowacja: neutralne</p>
+    </div>
+    <div id="production">
+       
+        <h2>Produkcja</h2>
+        <p>Tartak produkuje: 50 drewna miesięcznie</p>
+        <p>Fabryka produkuje: 25 stali miesięcznie</p>
+    </div>
+    <div id="army">
+        
+        <h2>Armia</h2>
+        <table>
+            <tr>
+                <th>Jednostka</th>
+                <th>Liczba</th>
+                <th>Cena</th>
+                <th>Siła</th>
+            </tr>
+            <tr>
+                <td>Piechota</td>
+                <td id="infantry-count">0</td>
+                <td>200 zł</td>
+                <td>10</td>
+                <td><button onclick="buyUnit('infantry')">Kup piechotę</button></td>
+            </tr>
+            <tr>
+                <td>Kawaleria</td>
+                <td id="cavalry-count">0</td>
+                <td>300 zł</td>
+                <td>15</td>
+                <td><button onclick="buyUnit('cavalry')">Kup kawalerię</button></td>
+            </tr>
+            <tr>
+                <td>Czołgi</td>
+                <td id="tanks-count">0</td>
+                <td>500 zł</td>
+                <td>25</td>
+                <td><button onclick="buyUnit('tanks')">Kup czołgi</button></td>
+            </tr>
+            <tr>
+                <td>Artyleria</td>
+                <td id="artillery-count">0</td>
+                <td>400 zł</td>
+                <td>20</td>
+                <td><button onclick="buyUnit('artillery')">Kup artylerię</button></td>
+            </tr>
+        </table>
+    </div>
+    <div id="actions">
+        <button onclick="startGame()">Rozpocznij grę</button>
+    </div>
+</div>
+
+<script>
+    // JavaScript
+
+    let gameStarted = false;
+    let year = 1918;
+    let month = 1;
+    let day = 1;
+    let hour = 0;
+    let minute = 0;
+    let second = 0;
+    let money = 1000;
+    let wood = 0;
+    let steel = 0;
+    let factories = 0; 
+    let sawmills = 0; 
+    function startGame() {
+        gameStarted = true;
+        setInterval(updateGame, 1000);
+        setInterval(updateDateTime, 1000);
+    }
+
+    function updateGame() {
+        day++; 
+
+        if (day > 30) { 
+            month++; 
+            wood += 50 * sawmills; 
+            steel += 25 * factories; 
+            updateEconomy(); 
+            day = 1; 
+        }
+
+        if (month > 12) { 
+            year++; 
+            month = 1; 
+        }
+    }
+
+    function updateDateTime() {
+        second++;
+
+        if (second == 60) {
+            second = 0;
+            minute++;
+        }
+
+        if (minute == 60) {
+            minute = 0;
+            hour++;
+        }
+
+        if (hour == 24) {
+            hour = 0;
+            day++;
+        }
+
+        if (day > 30) {
+            day = 1;
+            month++;
+        }
+
+        if (month > 12) {
+            month = 1;
+            year++;
+        }
+
+        document.getElementById('date').innerText = `${day}/${month}/${year}`;
+        document.getElementById('time').innerText = `${hour}:${minute}:${second}`;
+    }
+
+    function updateEconomy() {
+        document.getElementById('money').innerText = `Pieniądze: ${money} zł`;
+        document.getElementById('resources').innerText = `Surowce: ${wood} drewna, ${steel} stali`;
+    }
+
+    function buyResources() {
+        if (money >= 100) {
+            money -= 100;
+            wood += 50;
+            updateEconomy();
+        } else {
+            alert("Nie masz wystarczająco pieniędzy!");
+        }
+    }
+
+    function sellWood() {
+        if (wood >= 50) {
+            money += 50;
+            wood -= 50;
+            updateEconomy();
+        } else {
+            alert("Nie masz wystarczająco drewna!");
+        }
+    }
+
+    function sellSteel() {
+        if (steel >= 50) {
+            money += 100;
+            steel -= 50;
+            updateEconomy();
+        } else {
+            alert("Nie masz wystarczająco stali!");
+        }
+    }
+
+    function buildFactory() {
+        if (money >= 500) {
+            money -= 500;
+            factories++;
+            updateEconomy();
+            updateProductionInfo();
+        } else {
+            alert("Nie masz wystarczająco pieniędzy!");
+        }
+    }
+
+    function buildSawmill() {
+        if (money >= 300) {
+            money -= 300;
+            sawmills++;
+            updateEconomy();
+            updateProductionInfo();
+        } else {
+            alert("Nie masz wystarczająco pieniędzy!");
+        }
+    }
+
+    function buyUnit(unitType) {
+        let cost, strength;
+        switch (unitType) {
+            case 'infantry':
+                cost = 200;
+                strength = 10;
+                break;
+            case 'cavalry':
+                cost = 300;
+                strength = 15;
+                break;
+            case 'tanks':
+                cost = 500;
+                strength = 25;
+                break;
+            case 'artillery':
+                cost = 400;
+                strength = 20;
+                break;
+        }
+
+        if (money >= cost) {
+            money -= cost;
+            updateEconomy();
+            updateArmy(unitType, strength);
+        } else {
+            alert("Nie masz wystarczająco pieniędzy!");
+        }
+    }
+
+    function updateArmy(unitType, strength) {
+        switch (unitType) {
+            case 'infantry':
+                document.getElementById('infantry-count').innerText = parseInt(document.getElementById('infantry-count').innerText) + 1;
+                break;
+            case 'cavalry':
+                document.getElementById('cavalry-count').innerText = parseInt(document.getElementById('cavalry-count').innerText) + 1;
+                break;
+            case 'tanks':
+                document.getElementById('tanks-count').innerText = parseInt(document.getElementById('tanks-count').innerText) + 1;
+                break;
+            case 'artillery':
+                document.getElementById('artillery-count').innerText = parseInt(document.getElementById('artillery-count').innerText) + 1;
+                break;
+        }
+    }
+
+    function updateProductionInfo() {
+        document.getElementById('production').innerHTML = `
+            <h2>Produkcja</h2>
+            <p>Tartak produkuje: ${50 * sawmills} drewna miesięcznie</p>
+            <p>Fabryka produkuje: ${25 * factories} stali miesięcznie</p>
+        `;
+    }
+</script>
+
+</body>
+</html>
